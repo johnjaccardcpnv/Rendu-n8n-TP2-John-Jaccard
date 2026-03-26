@@ -91,7 +91,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return items.map(item => {\n  const j = item.json;\n \n  const record = {\n    message_id: j.message_id,\n    conversation_id:j.conversation_id,\n    mailbox: j.mailbox,\n    sender: j.sender,\n    recipients: j.recipients,\n    subject: j.subject,\n    body_text:j.body_text,\n    has_attachments:j.has_attachments,\n    text_for_embedding:j.text_for_embedding,\n    embedding_model: j.model,\n    embedding: Array.isArray(j.embeddings) ? j.embeddings[0] : [],\n    created_at: new Date().toISOString()\n  };\n \n  return {\n    json: {\n      line: JSON.stringify(record)\n    }\n  };\n});"
+        "jsCode": "return items.map(item => {\n  const j = item.json;\n \n  const record = {\n    message_id: j.message_id,\n    conversation_id:j.conversation_id,\n    mailbox: j.mailbox,\n    sender: j.sender,\n    recipients: j.recipients,\n    subject: j.subject,\n    body_text:j.body_text,\n    has_attachments:j.has_attachments,\n    text_for_embedding:j.text_for_embedding,\n    embedding_model: j.model,\n    embedding: Array.isArray(j.embedding) ? j.embedding[0] : [],\n    created_at: new Date().toISOString()\n  };\n \n  return {\n    json: {\n      line: JSON.stringify(record)\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -227,7 +227,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "82ee20bf-40d7-481c-a9c3-574dd20a2a1c",
+  "versionId": "9eeb8bc2-a632-44e7-a3c4-c9695de763e7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9d30d1f1874df20c0dc0c5e334ba45c46152a3794403b022f504026a467e081f"
