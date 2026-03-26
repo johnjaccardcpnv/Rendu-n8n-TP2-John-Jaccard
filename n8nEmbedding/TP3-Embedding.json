@@ -58,7 +58,7 @@
               "value": "=nomic-embed-text-v2-moe"
             },
             {
-              "name": "input",
+              "name": "prompt",
               "value": "={{ $json.text_for_embedding }}"
             }
           ]
@@ -227,7 +227,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b5e65247-2178-41ca-9779-5d5ccbd2b189",
+  "versionId": "82ee20bf-40d7-481c-a9c3-574dd20a2a1c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9d30d1f1874df20c0dc0c5e334ba45c46152a3794403b022f504026a467e081f"
