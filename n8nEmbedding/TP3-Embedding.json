@@ -1,0 +1,237 @@
+{
+  "name": "TP3-Embedding",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b586076b-3fe5-43d8-bfe9-0eb673fc888d",
+      "name": "Execute workflow"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d7de1642-9cb0-48a1-8f26-41ddcf990e92",
+      "name": "Récupère les messages Outlook",
+      "webhookId": "aaece64f-634b-4038-a1bf-4cdaffdda72b",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "Pc5DWq1XogTipmQP",
+          "name": "Microsoft Outlook account 22"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => { \n  const j = item.json; \n \n  const messageId = j.id || ''; \n  const conversationId = j.conversationId || ''; \n  const sender = j.from || ''; \n  const subject = j.subject || ''; \n  const bodyText = j.bodyPreview || ''; \n  const recipients = Array.isArray(j.to) ? j.to.join(', ') : ''; \n  const hasAttachments = j.hasAttachments ?? false; \n \n  const textForEmbedding = \n    `search_document: Objet: ${subject}\\n` + \n    `Expéditeur: ${sender}\\n` + \n    `Destinataire(s): ${recipients}\\n` + \n    `Message:\\n${bodyText}`; \n \n  return { \n    json: { \n      message_id: messageId, \n      conversation_id: conversationId, \n      mailbox: 'etudiant@cpnv.me', \n      sender, \n      subject, \n      body_text: bodyText, \n      recipients, \n      has_attachments: hasAttachments, \n      text_for_embedding: textForEmbedding \n    } \n  }; \n}); "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "de227708-84c8-48ea-ab21-42978aee3f11",
+      "name": "Crée un texte Condensé du mail"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://gpu.cpnv.me:11434/api/embeddings",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "=nomic-embed-text-v2-moe"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.text_for_embedding }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "ce891d5e-f276-46f0-85af-122c7f1a5cb8",
+      "name": "Calcul de l'embedding"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        752,
+        144
+      ],
+      "id": "3863746b-1832-41cf-9ac4-a12e9b67df23",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const j = item.json;\n \n  const record = {\n    message_id: j.message_id,\n    conversation_id:j.conversation_id,\n    mailbox: j.mailbox,\n    sender: j.sender,\n    recipients: j.recipients,\n    subject: j.subject,\n    body_text:j.body_text,\n    has_attachments:j.has_attachments,\n    text_for_embedding:j.text_for_embedding,\n    embedding_model: j.model,\n    embedding: Array.isArray(j.embeddings) ? j.embeddings[0] : [],\n    created_at: new Date().toISOString()\n  };\n \n  return {\n    json: {\n      line: JSON.stringify(record)\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        144
+      ],
+      "id": "d4430b84-307b-4b3f-98e9-0b25eee12d5b",
+      "name": "Transforme les données"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "binaryPropertyName": "=data",
+        "options": {
+          "fileName": "embeddingJaccard.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        144
+      ],
+      "id": "bff25dd6-98a5-4ab6-b05e-67ff0aba79ef",
+      "name": "Converti en un fichier"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/data/embeddingJaccard.json",
+        "dataPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        144
+      ],
+      "id": "b0179fb9-aa2b-4ec2-a5a6-29831e56027a",
+      "name": "Ecrit sur le disque"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute workflow": {
+      "main": [
+        [
+          {
+            "node": "Récupère les messages Outlook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Récupère les messages Outlook": {
+      "main": [
+        [
+          {
+            "node": "Crée un texte Condensé du mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crée un texte Condensé du mail": {
+      "main": [
+        [
+          {
+            "node": "Calcul de l'embedding",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Calcul de l'embedding": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Transforme les données",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transforme les données": {
+      "main": [
+        [
+          {
+            "node": "Converti en un fichier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converti en un fichier": {
+      "main": [
+        [
+          {
+            "node": "Ecrit sur le disque",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b5e65247-2178-41ca-9779-5d5ccbd2b189",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d30d1f1874df20c0dc0c5e334ba45c46152a3794403b022f504026a467e081f"
+  },
+  "id": "dDPRSbz3kDwviz3rjNZes",
+  "tags": []
+}
