@@ -1,3 +1,4 @@
+```json
 [ 
 	{
 	"requestType": "Account Update",
@@ -7,3 +8,4 @@
 	"outlookCategory": "Account Update"
 	}
 ]
+```
